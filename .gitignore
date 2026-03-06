@@ -1,3 +1,7 @@
 .DS_Store
 .cache/
 src/build/
+
+# benchmark 実行時に生成されるシンボリックリンク（絶対パス回避のためコミットしない）
+samples/exchange_mc_benchmark/**/lattice.def
+samples/exchange_mc_benchmark/**/interaction.def

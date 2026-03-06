@@ -263,6 +263,7 @@ def main():
     bench_dir.mkdir(parents=True, exist_ok=True)
 
     # lattice, interaction をコピー（またはシンボリックリンク）
+    # 相対パスでリンクすることで、リポジトリの移植性を確保
     import shutil
     for name in ["lattice.def", "interaction.def"]:
         dst = bench_dir / name
@@ -270,7 +271,8 @@ def main():
         if dst.exists():
             dst.unlink()
         try:
-            dst.symlink_to(src.resolve())
+            rel_path = os.path.relpath(src.resolve(), dst.parent.resolve())
+            dst.symlink_to(rel_path)
         except OSError:
             shutil.copy(src, dst)
 
