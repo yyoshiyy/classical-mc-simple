@@ -83,6 +83,9 @@ int allocate_minimal_mc_arrays(struct MCMainCalStruct *X) {
     X->Bind.Def.sx = alloc_double_2d(num_temp, All_N);
     X->Bind.Def.sy = alloc_double_2d(num_temp, All_N);
     X->Bind.Def.sz = alloc_double_2d(num_temp, All_N);
+    X->Bind.Def.prev_sx = alloc_double_2d(num_temp, All_N);
+    X->Bind.Def.prev_sy = alloc_double_2d(num_temp, All_N);
+    X->Bind.Def.prev_sz = alloc_double_2d(num_temp, All_N);
     X->Bind.Def.env_sx = alloc_double_2d(num_temp, All_N);
     X->Bind.Def.env_sy = alloc_double_2d(num_temp, All_N);
     X->Bind.Def.env_sz = alloc_double_2d(num_temp, All_N);
@@ -95,7 +98,9 @@ int allocate_minimal_mc_arrays(struct MCMainCalStruct *X) {
     X->Bind.Phys.ratio_1 = (int *)calloc((size_t)num_temp, sizeof(int));
 
     if (X->Bind.Def.sx == NULL || X->Bind.Def.sy == NULL ||
-        X->Bind.Def.sz == NULL || X->Bind.Def.env_sx == NULL ||
+        X->Bind.Def.sz == NULL || X->Bind.Def.prev_sx == NULL ||
+        X->Bind.Def.prev_sy == NULL || X->Bind.Def.prev_sz == NULL ||
+        X->Bind.Def.env_sx == NULL ||
         X->Bind.Def.env_sy == NULL || X->Bind.Def.env_sz == NULL ||
         X->Bind.Def.Nr == NULL || X->Bind.Def.J == NULL ||
         X->Bind.Def.stag_sign == NULL || X->Bind.Def.stripe_sign_1 == NULL ||
@@ -118,6 +123,9 @@ void free_minimal_mc_arrays(struct MCMainCalStruct *X) {
     free_double_2d(X->Bind.Def.sx, num_temp);
     free_double_2d(X->Bind.Def.sy, num_temp);
     free_double_2d(X->Bind.Def.sz, num_temp);
+    free_double_2d(X->Bind.Def.prev_sx, num_temp);
+    free_double_2d(X->Bind.Def.prev_sy, num_temp);
+    free_double_2d(X->Bind.Def.prev_sz, num_temp);
     free_double_2d(X->Bind.Def.env_sx, num_temp);
     free_double_2d(X->Bind.Def.env_sy, num_temp);
     free_double_2d(X->Bind.Def.env_sz, num_temp);
@@ -144,13 +152,16 @@ int allocate_work_arrays(int num_temp, struct SimpleWorkArrays *W) {
     W->accum_C = (double *)calloc((size_t)num_temp, sizeof(double));
     W->accum_M2 = (double *)calloc((size_t)num_temp, sizeof(double));
     W->accum_A = (double *)calloc((size_t)num_temp, sizeof(double));
+    W->accum_overlap = (double *)calloc((size_t)num_temp, sizeof(double));
     W->sample_E = (double *)calloc((size_t)num_temp, sizeof(double));
     W->sample_E2 = (double *)calloc((size_t)num_temp, sizeof(double));
     W->sample_M2 = (double *)calloc((size_t)num_temp, sizeof(double));
+    W->sample_overlap = (double *)calloc((size_t)num_temp, sizeof(double));
 
     if (W->accum_E == NULL || W->accum_C == NULL || W->accum_M2 == NULL ||
-        W->accum_A == NULL || W->sample_E == NULL || W->sample_E2 == NULL ||
-        W->sample_M2 == NULL) {
+        W->accum_A == NULL || W->accum_overlap == NULL ||
+        W->sample_E == NULL || W->sample_E2 == NULL || W->sample_M2 == NULL ||
+        W->sample_overlap == NULL) {
         free_work_arrays(W);
         return -1;
     }
@@ -166,7 +177,9 @@ void free_work_arrays(struct SimpleWorkArrays *W) {
     free(W->accum_C);
     free(W->accum_M2);
     free(W->accum_A);
+    free(W->accum_overlap);
     free(W->sample_E);
     free(W->sample_E2);
     free(W->sample_M2);
+    free(W->sample_overlap);
 }

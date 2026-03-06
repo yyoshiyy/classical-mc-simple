@@ -2,10 +2,32 @@
 #include "memory.h"
 
 /*
- * Return instantaneous M^2 per site:
- *   M^2 = (Mx^2 + My^2 + Mz^2) / N^2
- * This is computed at each MC step, then averaged in time.
+ * Overlap between current and initial (t=0) spin config:
+ *   overlap = (1/N) sum_i S_i(t) · S_i(0)
+ * Lower overlap indicates config has evolved away from initial state.
  */
+static double compute_overlap(struct BindStruct *X, int int_T) {
+    int all_i, All_N;
+    double sum;
+
+    All_N = X->Def.All_N;
+    sum = 0.0;
+    for (all_i = 0; all_i < All_N; all_i++) {
+        sum += X->Def.sx[int_T][all_i] * X->Def.prev_sx[int_T][all_i] +
+               X->Def.sy[int_T][all_i] * X->Def.prev_sy[int_T][all_i] +
+               X->Def.sz[int_T][all_i] * X->Def.prev_sz[int_T][all_i];
+    }
+    return sum / (double)All_N;
+}
+
+/* Copy current config to init (t=0) for overlap. Called once at measurement start. */
+static void copy_spins_to_init(struct BindStruct *X, int int_T) {
+    int All_N = X->Def.All_N;
+    memcpy(X->Def.prev_sx[int_T], X->Def.sx[int_T], (size_t)All_N * sizeof(double));
+    memcpy(X->Def.prev_sy[int_T], X->Def.sy[int_T], (size_t)All_N * sizeof(double));
+    memcpy(X->Def.prev_sz[int_T], X->Def.sz[int_T], (size_t)All_N * sizeof(double));
+}
+
 static double magnetization_sq(struct BindStruct *X, int int_T) {
     int all_i, All_N;
     double mx, my, mz;
@@ -69,6 +91,8 @@ int main(int argc, char **argv) {
     int num_temp, All_N, ni_max;
     int Burn_in, Total_Step, Sample;
     int int_samp, int_T, step;
+    int n_exchange_accept, n_exchange_try;
+    long total_exchange_accept, total_exchange_try;
     unsigned long base_seed;
     unsigned long seed;
     double Ini_T, Delta_T;
@@ -140,7 +164,10 @@ int main(int argc, char **argv) {
         }
     }
 
-    printf("MC_simple stage1 (no MPI, no exchange MC)\n");
+    total_exchange_accept = 0;
+    total_exchange_try = 0;
+    printf("MC_simple stage1 (no MPI, %s)\n",
+           X.Bind.Def.enable_exchange ? "with exchange MC" : "no exchange MC");
     printf("L=(%d,%d,%d) orb=%d spin_dim=%d All_N=%d ni_max=%d\n",
            X.Bind.Def.L_x, X.Bind.Def.L_y, X.Bind.Def.L_z, X.Bind.Def.orb_num,
            X.Bind.Def.spin_dim, All_N, ni_max);
@@ -167,25 +194,48 @@ int main(int argc, char **argv) {
                 X.Bind.Phys.T = Ini_T + Delta_T * (double)int_T;
                 MC(&dsfmt, &(X.Bind));
             }
+            /* Exchange MC: attempt swap between adjacent temperatures */
+            if (X.Bind.Def.enable_exchange) {
+                for (int_T = 0; int_T < num_temp - 1; int_T++) {
+                    (void)attempt_exchange(&dsfmt, &(X.Bind), int_T);
+                }
+            }
         }
 
         memset(X.Bind.Phys.ratio_1, 0, (size_t)num_temp * sizeof(int));
         memset(W.sample_E, 0, (size_t)num_temp * sizeof(double));
         memset(W.sample_E2, 0, (size_t)num_temp * sizeof(double));
         memset(W.sample_M2, 0, (size_t)num_temp * sizeof(double));
+        memset(W.sample_overlap, 0, (size_t)num_temp * sizeof(double));
+        n_exchange_accept = 0;
+        n_exchange_try = 0;
 
-        /* Measurement phase: update then record E/N, E^2, and M^2 each step. */
+        /* Store t=0 config for overlap = S(t)·S(0) (after burn-in, before measurement) */
+        for (int_T = 0; int_T < num_temp; int_T++) {
+            copy_spins_to_init(&(X.Bind), int_T);
+        }
+
+        /* Measurement phase: update then record E/N, E^2, M^2, overlap each step. */
         for (step = 0; step < Total_Step; step++) {
             for (int_T = 0; int_T < num_temp; int_T++) {
                 X.Bind.Def.int_T = int_T;
                 X.Bind.Phys.T = Ini_T + Delta_T * (double)int_T;
                 MC(&dsfmt, &(X.Bind));
             }
+            /* Exchange MC: attempt swap between adjacent temperatures */
+            if (X.Bind.Def.enable_exchange) {
+                for (int_T = 0; int_T < num_temp - 1; int_T++) {
+                    n_exchange_try++;
+                    n_exchange_accept +=
+                        attempt_exchange(&dsfmt, &(X.Bind), int_T);
+                }
+            }
             for (int_T = 0; int_T < num_temp; int_T++) {
                 double e_total = X.Bind.Phys.Energy[int_T];
                 W.sample_E[int_T] += e_total / (double)All_N;
                 W.sample_E2[int_T] += e_total * e_total;
                 W.sample_M2[int_T] += magnetization_sq(&(X.Bind), int_T);
+                W.sample_overlap[int_T] += compute_overlap(&(X.Bind), int_T);
             }
         }
 
@@ -211,19 +261,30 @@ int main(int argc, char **argv) {
             W.accum_C[int_T] += c_avg;
             W.accum_M2[int_T] += m2_avg;
             W.accum_A[int_T] += a_avg;
+            W.accum_overlap[int_T] += W.sample_overlap[int_T] / (double)Total_Step;
         }
+        total_exchange_accept += n_exchange_accept;
+        total_exchange_try += n_exchange_try;
         printf("sample %d/%d done (seed=%lu)\n", int_samp + 1, Sample, seed);
     }
 
     fp = fopen("MC_simple_result.dat", "w");
     if (fp != NULL) {
-        fprintf(fp, "# T  E_per_site  C_per_site  M2  acceptance\n");
+        fprintf(fp, "# T  E_per_site  C_per_site  M2  acceptance  overlap\n");
+        if (total_exchange_try > 0) {
+            fprintf(fp, "# exchange_acceptance = %.6f\n",
+                    (double)total_exchange_accept / (double)total_exchange_try);
+        }
     } else {
         fprintf(stderr,
                 "Warning: cannot open MC_simple_result.dat for write\n");
     }
 
-    printf("\n# T  E_per_site  C_per_site  M2  acceptance\n");
+    printf("\n# T  E_per_site  C_per_site  M2  acceptance  overlap\n");
+    if (total_exchange_try > 0) {
+        printf("# exchange_acceptance = %.6f\n",
+               (double)total_exchange_accept / (double)total_exchange_try);
+    }
     /* Final average over independent samples. */
     for (int_T = 0; int_T < num_temp; int_T++) {
         double T = Ini_T + Delta_T * (double)int_T;
@@ -231,9 +292,10 @@ int main(int argc, char **argv) {
         double C = W.accum_C[int_T] / (double)Sample;
         double M2 = W.accum_M2[int_T] / (double)Sample;
         double A = W.accum_A[int_T] / (double)Sample;
-        printf("%.8f  %.10f  %.10f  %.10f  %.10f\n", T, E, C, M2, A);
+        double Ov = W.accum_overlap[int_T] / (double)Sample;
+        printf("%.8f  %.10f  %.10f  %.10f  %.10f  %.10f\n", T, E, C, M2, A, Ov);
         if (fp != NULL) {
-            fprintf(fp, "%.8f  %.10f  %.10f  %.10f  %.10f\n", T, E, C, M2, A);
+            fprintf(fp, "%.8f  %.10f  %.10f  %.10f  %.10f  %.10f\n", T, E, C, M2, A, Ov);
         }
     }
 

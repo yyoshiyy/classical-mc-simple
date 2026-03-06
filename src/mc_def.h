@@ -33,7 +33,8 @@ struct DefineList {
     double H;
 
     /* Output control */
-    int output_spin; /* 0: skip spin output (default), 1: enable */
+    int output_spin;   /* 0: skip spin output (default), 1: enable */
+    int enable_exchange; /* 0: no Exchange MC, 1: enable (default) */
 
     /* NER (Non-Equilibrium Relaxation) */
     int init_state; /* 0=RANDOM(default), 1=FM, 2=AF(Neel), 3=Stripe1(pi,0),
@@ -46,6 +47,7 @@ struct DefineList {
 
     double *send_buffer, *recv_buffer;
     double **sx, **sy, **sz;
+    double **prev_sx, **prev_sy, **prev_sz; /* S(0) at measurement start for overlap */
     double *All_sx, *All_sy, *All_sz;
     double *AG_sx, *AG_sy, *AG_sz;
     double **env_sx, **env_sy, **env_sz;
@@ -224,5 +226,6 @@ void initial(dsfmt_t *dsfmt, struct BindStruct *X);
 
 /* mc_update.c */
 void MC(dsfmt_t *dsfmt, struct BindStruct *X);
+int attempt_exchange(dsfmt_t *dsfmt, struct BindStruct *X, int int_T);
 
 #endif /* MC_DEF_H */

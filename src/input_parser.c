@@ -50,9 +50,10 @@ int read_param(const char *filename, struct DefineList *Def) {
     char val[LINE_BUF];
 
     /* Default values */
-    Def->spin_dim = 3;    /* Heisenberg */
-    Def->output_spin = 0; /* skip spin output by default */
-    Def->init_state = 0;  /* RANDOM */
+    Def->spin_dim = 3;        /* Heisenberg */
+    Def->output_spin = 0;     /* skip spin output by default */
+    Def->enable_exchange = 1; /* Exchange MC on by default */
+    Def->init_state = 0;      /* RANDOM */
 
     fp = fopen(filename, "r");
     if (fp == NULL) {
@@ -90,6 +91,8 @@ int read_param(const char *filename, struct DefineList *Def) {
             Def->output_spin = atoi(val);
         } else if (strcmp(key, "init_state") == 0) {
             Def->init_state = atoi(val);
+        } else if (strcmp(key, "enable_exchange") == 0) {
+            Def->enable_exchange = atoi(val);
         } else {
             fprintf(stderr, "Warning: unknown key '%s' in '%s'\n", key,
                     filename);
