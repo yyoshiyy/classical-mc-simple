@@ -71,8 +71,6 @@ int attempt_exchange(dsfmt_t *dsfmt, struct BindStruct *X, int int_T) {
         X->Phys.ratio_1[j] = rtmp;
     }
 
-    /* Do NOT swap prev (init_s): overlap = S(t)·S(0), init stays fixed per slot */
-
     return 1;
 }
 
