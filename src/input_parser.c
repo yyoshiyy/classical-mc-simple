@@ -54,6 +54,7 @@ int read_param(const char *filename, struct DefineList *Def) {
     Def->output_spin = 0;     /* skip spin output by default */
     Def->enable_exchange = 1; /* Exchange MC on by default */
     Def->init_state = 0;      /* RANDOM */
+    Def->enable_ner = 0;      /* NER mode off by default */
 
     fp = fopen(filename, "r");
     if (fp == NULL) {
@@ -93,6 +94,11 @@ int read_param(const char *filename, struct DefineList *Def) {
             Def->init_state = atoi(val);
         } else if (strcmp(key, "enable_exchange") == 0) {
             Def->enable_exchange = atoi(val);
+        } else if (strcmp(key, "enable_ner") == 0) {
+            Def->enable_ner = atoi(val);
+        } else if (strcmp(key, "run_mode") == 0) {
+            /* run_mode = ner enables NER, anything else is equilibrium */
+            Def->enable_ner = (strcmp(val, "ner") == 0) ? 1 : 0;
         } else {
             fprintf(stderr, "Warning: unknown key '%s' in '%s'\n", key,
                     filename);

@@ -35,6 +35,7 @@ struct DefineList {
     /* Output control */
     int output_spin;   /* 0: skip spin output (default), 1: enable */
     int enable_exchange; /* 0: no Exchange MC, 1: enable (default) */
+    int enable_ner;    /* 0: equilibrium mode (default), 1: NER mode */
 
     /* NER (Non-Equilibrium Relaxation) */
     int init_state; /* 0=RANDOM(default), 1=FM, 2=AF(Neel), 3=Stripe1(pi,0),
@@ -223,6 +224,7 @@ int read_interaction(const char *filename, struct DefineList *Def);
 /* lattice.c */
 int build_lattice(const char *filename, struct BindStruct *X);
 void initial(dsfmt_t *dsfmt, struct BindStruct *X);
+void initial_ner(dsfmt_t *dsfmt, struct BindStruct *X);
 
 /* mc_update.c */
 void MC(dsfmt_t *dsfmt, struct BindStruct *X);

@@ -97,6 +97,22 @@ int allocate_minimal_mc_arrays(struct MCMainCalStruct *X) {
     X->Bind.Phys.Energy = (double *)calloc((size_t)num_temp, sizeof(double));
     X->Bind.Phys.ratio_1 = (int *)calloc((size_t)num_temp, sizeof(int));
 
+    /* NER mode: allocate Ini_sx, Ini_sy, Ini_sz for overlap q(t) = S(t)·S(0) */
+    if (X->Bind.Def.enable_ner) {
+        X->Bind.Def.Ini_sx = (double *)calloc((size_t)All_N, sizeof(double));
+        X->Bind.Def.Ini_sy = (double *)calloc((size_t)All_N, sizeof(double));
+        X->Bind.Def.Ini_sz = (double *)calloc((size_t)All_N, sizeof(double));
+        if (X->Bind.Def.Ini_sx == NULL || X->Bind.Def.Ini_sy == NULL ||
+            X->Bind.Def.Ini_sz == NULL) {
+            free_minimal_mc_arrays(X);
+            return -1;
+        }
+    } else {
+        X->Bind.Def.Ini_sx = NULL;
+        X->Bind.Def.Ini_sy = NULL;
+        X->Bind.Def.Ini_sz = NULL;
+    }
+
     if (X->Bind.Def.sx == NULL || X->Bind.Def.sy == NULL ||
         X->Bind.Def.sz == NULL || X->Bind.Def.prev_sx == NULL ||
         X->Bind.Def.prev_sy == NULL || X->Bind.Def.prev_sz == NULL ||
@@ -135,6 +151,13 @@ void free_minimal_mc_arrays(struct MCMainCalStruct *X) {
     free(X->Bind.Def.stag_sign);
     free(X->Bind.Def.stripe_sign_1);
     free(X->Bind.Def.stripe_sign_2);
+
+    if (X->Bind.Def.Ini_sx != NULL)
+        free(X->Bind.Def.Ini_sx);
+    if (X->Bind.Def.Ini_sy != NULL)
+        free(X->Bind.Def.Ini_sy);
+    if (X->Bind.Def.Ini_sz != NULL)
+        free(X->Bind.Def.Ini_sz);
 
     free(X->Bind.Phys.Energy);
     free(X->Bind.Phys.ratio_1);

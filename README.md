@@ -106,6 +106,8 @@ Supported keys:
 - `spin_dim` (int): `1` (Ising), `2` (XY), `3` (Heisenberg)
 - `output_spin` (int, optional): `0` off, `1` on
 - `enable_exchange` (int, optional): `0` no Exchange MC, `1` enable (default)
+- `enable_ner` (int, optional): `0` equilibrium mode (default), `1` NER mode
+- `run_mode` (str, optional): `ner` enables NER mode, anything else is equilibrium
 - `init_state` (int, optional): initial spin mode
   - `0`: random
   - `1`: FM
@@ -199,9 +201,32 @@ python scripts/benchmark_exchange_mc.py --n-runs 20
 
 詳細は `scripts/README.md` を参照。
 
+## NER (Non-Equilibrium Relaxation) Mode
+
+Set `enable_ner = 1` or `run_mode = ner` in `param.def` to enable NER mode.
+
+- No burn-in: quench from controlled initial state (`init_state`) to target temperature
+- Time-series output: `m(t)`, `m2(t)`, `e_per_site(t)`, `q(t)` (overlap with initial config)
+- Output file: `NER_result.dat` (columns: `t  T  m  m2  e_per_site  q`)
+- NER mode uses `num_temp = 1` (single temperature)
+
+Example: `samples/square_L16_Ising/param_ner.def`
+
+## MPI Parallelization (Optional)
+
+Build with MPI for independent-run parallelism:
+
+```bash
+cd src
+cmake -S . -B build -DUSE_MPI=ON
+cmake --build build -j
+```
+
+Requires MPI (OpenMPI, MPICH, etc.). Each rank runs the full lattice with a different RNG seed; observables are reduced across ranks. Run with `mpirun -np N ./MC_simple`.
+
 ## Notes
 
-- Single-process only (no MPI)
+- Default build: single-process (no MPI)
 - Replica exchange and over-relaxation are intentionally omitted
 - dSFMT parameter is fixed to `MEXP=19937` in this minimal version
 
