@@ -4,13 +4,15 @@
 #include "mc_def.h"
 
 struct SimpleWorkArrays {
-    double *accum_E;   /* Sum over samples of per-sample <E/N> */
-    double *accum_C;   /* Sum over samples of per-sample specific heat */
-    double *accum_M2;  /* Sum over samples of per-sample <M^2> */
-    double *accum_A;   /* Sum over samples of per-sample acceptance */
-    double *sample_E;  /* Sum over MC steps within one sample, using E/N */
-    double *sample_E2; /* Sum over MC steps within one sample, using E^2 */
-    double *sample_M2; /* Sum over MC steps within one sample */
+    double *accum_E;      /* Sum over samples of per-sample <E/N> */
+    double *accum_C;     /* Sum over samples of per-sample specific heat */
+    double *accum_M2;    /* Sum over samples of per-sample <M^2> */
+    double *accum_A;     /* Sum over samples of per-sample acceptance */
+    double *accum_overlap; /* Sum over samples of per-sample <overlap> */
+    double *sample_E;    /* Sum over MC steps within one sample, using E/N */
+    double *sample_E2;   /* Sum over MC steps within one sample, using E^2 */
+    double *sample_M2;   /* Sum over MC steps within one sample */
+    double *sample_overlap; /* Sum over MC steps: overlap with prev config */
 };
 
 int allocate_minimal_mc_arrays(struct MCMainCalStruct *X);

@@ -1,6 +1,95 @@
 #include "mc_def.h"
 
 /*
+ * Attempt Exchange MC swap between adjacent replicas int_T and int_T+1.
+ * Acceptance: P = min(1, exp((1/T_i - 1/T_j) * (E_i - E_j)))
+ * On accept: swap sx/sy/sz, env_sx/env_sy/env_sz, Energy, ratio_1.
+ * Returns 1 if accepted, 0 otherwise.
+ */
+int attempt_exchange(dsfmt_t *dsfmt, struct BindStruct *X, int int_T) {
+    int j = int_T + 1;
+    int All_N = X->Def.All_N;
+    double T_i, T_j, E_i, E_j;
+    double prob, r;
+    int all_i;
+    double tmp;
+
+    if (j >= X->Def.num_temp)
+        return 0;
+
+    T_i = X->Def.Ini_T + X->Def.Delta_T * (double)int_T;
+    T_j = X->Def.Ini_T + X->Def.Delta_T * (double)j;
+    E_i = X->Phys.Energy[int_T];
+    E_j = X->Phys.Energy[j];
+
+    prob = exp((1.0 / T_i - 1.0 / T_j) * (E_i - E_j));
+    if (prob > 1.0)
+        prob = 1.0;
+
+    r = dsfmt_genrand_close_open(dsfmt);
+    if (r >= prob)
+        return 0;
+
+    /* Swap spins */
+    for (all_i = 0; all_i < All_N; all_i++) {
+        tmp = X->Def.sx[int_T][all_i];
+        X->Def.sx[int_T][all_i] = X->Def.sx[j][all_i];
+        X->Def.sx[j][all_i] = tmp;
+
+        tmp = X->Def.sy[int_T][all_i];
+        X->Def.sy[int_T][all_i] = X->Def.sy[j][all_i];
+        X->Def.sy[j][all_i] = tmp;
+
+        tmp = X->Def.sz[int_T][all_i];
+        X->Def.sz[int_T][all_i] = X->Def.sz[j][all_i];
+        X->Def.sz[j][all_i] = tmp;
+    }
+
+    /* Swap effective fields */
+    for (all_i = 0; all_i < All_N; all_i++) {
+        tmp = X->Def.env_sx[int_T][all_i];
+        X->Def.env_sx[int_T][all_i] = X->Def.env_sx[j][all_i];
+        X->Def.env_sx[j][all_i] = tmp;
+
+        tmp = X->Def.env_sy[int_T][all_i];
+        X->Def.env_sy[int_T][all_i] = X->Def.env_sy[j][all_i];
+        X->Def.env_sy[j][all_i] = tmp;
+
+        tmp = X->Def.env_sz[int_T][all_i];
+        X->Def.env_sz[int_T][all_i] = X->Def.env_sz[j][all_i];
+        X->Def.env_sz[j][all_i] = tmp;
+    }
+
+    /* Swap Energy and ratio_1 */
+    tmp = X->Phys.Energy[int_T];
+    X->Phys.Energy[int_T] = X->Phys.Energy[j];
+    X->Phys.Energy[j] = tmp;
+
+    {
+        int rtmp = X->Phys.ratio_1[int_T];
+        X->Phys.ratio_1[int_T] = X->Phys.ratio_1[j];
+        X->Phys.ratio_1[j] = rtmp;
+    }
+
+    /* Swap prev (for overlap computation) */
+    for (all_i = 0; all_i < All_N; all_i++) {
+        tmp = X->Def.prev_sx[int_T][all_i];
+        X->Def.prev_sx[int_T][all_i] = X->Def.prev_sx[j][all_i];
+        X->Def.prev_sx[j][all_i] = tmp;
+
+        tmp = X->Def.prev_sy[int_T][all_i];
+        X->Def.prev_sy[int_T][all_i] = X->Def.prev_sy[j][all_i];
+        X->Def.prev_sy[j][all_i] = tmp;
+
+        tmp = X->Def.prev_sz[int_T][all_i];
+        X->Def.prev_sz[int_T][all_i] = X->Def.prev_sz[j][all_i];
+        X->Def.prev_sz[j][all_i] = tmp;
+    }
+
+    return 1;
+}
+
+/*
  * One full Metropolis sweep for a single temperature slot (int_T):
  *   - Visit all spins once.
  *   - Propose a new spin orientation (distribution depends on spin_dim).

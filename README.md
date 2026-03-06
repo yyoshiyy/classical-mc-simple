@@ -60,6 +60,7 @@ Columns:
 3. `C_per_site`
 4. `M2`
 5. `acceptance`
+6. `overlap` — step 間のスピン配置の overlap `(1/N)Σ_i S_i(t)·S_i(t-1)`。低いほど mix が良い（Exchange MC の効果指標）
 
 Definitions:
 
@@ -104,6 +105,7 @@ Supported keys:
 - `H` (double): field coupled to `S_z`
 - `spin_dim` (int): `1` (Ising), `2` (XY), `3` (Heisenberg)
 - `output_spin` (int, optional): `0` off, `1` on
+- `enable_exchange` (int, optional): `0` no Exchange MC, `1` enable (default)
 - `init_state` (int, optional): initial spin mode
   - `0`: random
   - `1`: FM
@@ -186,6 +188,16 @@ Main source files are in `src/`:
 - `mc_def.h`: shared structs/prototypes
 - `dSFMT.c`, `dSFMT.h`, `dSFMT-params.h`, `dSFMT-params19937.h`: random number generator
 - `CMakeLists.txt`: build config
+
+## Exchange MC 効果の検証
+
+`scripts/benchmark_exchange_mc.py` で Exchange MC の有無によるエラーバー比較が可能:
+
+```bash
+python scripts/benchmark_exchange_mc.py --n-runs 20
+```
+
+詳細は `scripts/README.md` を参照。
 
 ## Notes
 

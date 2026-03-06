@@ -1,0 +1,11 @@
+# Benchmark: Exchange MC comparison
+Burn_in    = 5000
+Total_Step = 10000
+Sample     = 5
+num_temp   = 5
+Ini_T      = 1.2
+Delta_T    = 0.35
+lambda     = 1.0
+H          = 0.0
+spin_dim   = 1
+enable_exchange = 0
