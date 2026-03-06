@@ -107,7 +107,7 @@ Supported keys:
 - `output_spin` (int, optional): `0` off, `1` on
 - `enable_exchange` (int, optional): `0` no Exchange MC, `1` enable (default)
 - `enable_ner` (int, optional): `0` equilibrium mode (default), `1` NER mode
-- `run_mode` (str, optional): `ner` enables NER mode, anything else is equilibrium
+- `run_mode` (str, optional): `ner` (case-insensitive) enables NER mode, anything else is equilibrium
 - `init_state` (int, optional): initial spin mode
   - `0`: random
   - `1`: FM
