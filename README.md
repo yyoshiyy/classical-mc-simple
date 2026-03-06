@@ -212,6 +212,16 @@ Set `enable_ner = 1` or `run_mode = ner` in `param.def` to enable NER mode.
 
 Example: `samples/square_L16_Ising/param_ner.def`
 
+計算とプロットを一括実行:
+
+```bash
+python scripts/run_ner_and_plot.py
+```
+
+NER 計算後に自動で `NER_plot.png` を生成する。個別実行: `scripts/plot_ner_result.py`
+
+臨界指数推定は NER 計算後に自動実行される。T≈Tc でべき乗減衰が成立し z を推定。スキップ: `--no-analyze`。Tc 用: `--param param_ner_tc.def`
+
 ## MPI Parallelization (Optional)
 
 Build with MPI for independent-run parallelism:
