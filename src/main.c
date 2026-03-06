@@ -2,9 +2,9 @@
 #include "memory.h"
 
 /*
- * Overlap between current and previous spin config:
- *   overlap = (1/N) sum_i S_i(t) · S_i(t-1)
- * Lower overlap indicates better mixing (e.g. after Exchange MC swap).
+ * Overlap between current and initial (t=0) spin config:
+ *   overlap = (1/N) sum_i S_i(t) · S_i(0)
+ * Lower overlap indicates config has evolved away from initial state.
  */
 static double compute_overlap(struct BindStruct *X, int int_T) {
     int all_i, All_N;
@@ -20,7 +20,8 @@ static double compute_overlap(struct BindStruct *X, int int_T) {
     return sum / (double)All_N;
 }
 
-static void copy_spins_to_prev(struct BindStruct *X, int int_T) {
+/* Copy current config to init (t=0) for overlap. Called once at measurement start. */
+static void copy_spins_to_init(struct BindStruct *X, int int_T) {
     int All_N = X->Def.All_N;
     memcpy(X->Def.prev_sx[int_T], X->Def.sx[int_T], (size_t)All_N * sizeof(double));
     memcpy(X->Def.prev_sy[int_T], X->Def.sy[int_T], (size_t)All_N * sizeof(double));
@@ -209,9 +210,9 @@ int main(int argc, char **argv) {
         n_exchange_accept = 0;
         n_exchange_try = 0;
 
-        /* Copy initial config to prev for overlap (after burn-in) */
+        /* Store t=0 config for overlap = S(t)·S(0) (after burn-in, before measurement) */
         for (int_T = 0; int_T < num_temp; int_T++) {
-            copy_spins_to_prev(&(X.Bind), int_T);
+            copy_spins_to_init(&(X.Bind), int_T);
         }
 
         /* Measurement phase: update then record E/N, E^2, M^2, overlap each step. */
@@ -235,7 +236,6 @@ int main(int argc, char **argv) {
                 W.sample_E2[int_T] += e_total * e_total;
                 W.sample_M2[int_T] += magnetization_sq(&(X.Bind), int_T);
                 W.sample_overlap[int_T] += compute_overlap(&(X.Bind), int_T);
-                copy_spins_to_prev(&(X.Bind), int_T);
             }
         }
 

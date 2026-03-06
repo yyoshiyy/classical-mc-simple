@@ -41,6 +41,6 @@ python scripts/benchmark_exchange_mc.py --preset strong
 
 ### overlap による EXMC 効果
 
-- **overlap** = step 間のスピン配置の類似度 `(1/N)Σ S(t)·S(t-1)`
-- 高い overlap = 同じ配置に留まりやすい（critical slowing down）
+- **overlap** = t=0 と t の間の類似度 `(1/N)Σ S_i(t)·S_i(0)`
+- 高い overlap = 初期状態からあまり離れていない（critical slowing down）
 - **Exchange MC ありで overlap が低い** = 温度交換で phase space をよく探索できている

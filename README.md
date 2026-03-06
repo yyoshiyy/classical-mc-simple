@@ -60,7 +60,7 @@ Columns:
 3. `C_per_site`
 4. `M2`
 5. `acceptance`
-6. `overlap` — step 間のスピン配置の overlap `(1/N)Σ_i S_i(t)·S_i(t-1)`。低いほど mix が良い（Exchange MC の効果指標）
+6. `overlap` — t=0 と t の間の overlap `(1/N)Σ_i S_i(t)·S_i(0)`。低いほど初期状態から離れている。Exchange MC の効果指標
 
 Definitions:
 

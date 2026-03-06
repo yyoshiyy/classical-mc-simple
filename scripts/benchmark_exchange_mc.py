@@ -216,7 +216,7 @@ def plot_results(data_no_ex, data_with_ex, out_path: Path):
                 yerr=data_with_ex["overlap_err"],
                 fmt="s--", capsize=3, label="with Exchange MC")
     ax.set_xlabel("T")
-    ax.set_ylabel("overlap (consecutive steps)")
+    ax.set_ylabel("overlap (S(t)·S(0))")
     ax.legend()
     ax.grid(True, alpha=0.3)
     ax.axhline(1.0, color="gray", linestyle=":", alpha=0.5)

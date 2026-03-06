@@ -47,7 +47,7 @@ struct DefineList {
 
     double *send_buffer, *recv_buffer;
     double **sx, **sy, **sz;
-    double **prev_sx, **prev_sy, **prev_sz; /* previous config for overlap */
+    double **prev_sx, **prev_sy, **prev_sz; /* S(0) at measurement start for overlap */
     double *All_sx, *All_sy, *All_sz;
     double *AG_sx, *AG_sy, *AG_sz;
     double **env_sx, **env_sy, **env_sz;
