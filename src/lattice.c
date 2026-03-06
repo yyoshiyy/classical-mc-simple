@@ -274,11 +274,10 @@ void initial(dsfmt_t *dsfmt, struct BindStruct *X) {
     spin_dim = X->Def.spin_dim;
 
     /*
-     * Build neighbor list once. In this stage1 code path, interaction file
-     * name is fixed to "interaction.def" in the run directory.
+     * Lattice (Nr, J) must be built by main via build_lattice() before
+     * calling initial(). This allows main to use the correct interaction
+     * file path from CLI.
      */
-    build_lattice("interaction.def", X);
-
     /*
      * Initialize each temperature replica independently with random spins.
      * (Replica exchange is removed in stage1, but the data layout keeps

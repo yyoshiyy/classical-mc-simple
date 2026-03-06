@@ -1,0 +1,13 @@
+# NER (Non-Equilibrium Relaxation) mode for 2D Ising
+# Quench from FM initial state, track m(t), m2(t), e(t), q(t)
+enable_ner  = 1
+Burn_in     = 0
+Total_Step  = 100
+Sample      = 2
+num_temp    = 1
+Ini_T       = 2.5
+Delta_T     = 0.0
+lambda      = 1.0
+H           = 0.0
+spin_dim    = 1
+init_state  = 1

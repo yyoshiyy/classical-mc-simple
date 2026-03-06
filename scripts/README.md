@@ -1,5 +1,42 @@
 # scripts/
 
+## run_ner_and_plot.py
+
+NER モードで計算を実行し、完了後に自動でプロットする。
+
+```bash
+python scripts/run_ner_and_plot.py
+```
+
+- `--sample DIR`: サンプルディレクトリ (デフォルト: square_L16_Ising)
+- `--param FILE`: param ファイル (デフォルト: param_ner.def)
+- `--no-save`: プロットをファイルに保存せず表示のみ
+- `--no-analyze`: 臨界指数推定をスキップ（デフォルトは自動実行）
+
+## analyze_ner_critical.py
+
+NER_result.dat から臨界指数を推定。m(t) ~ A*t^(-α) をフィットし、α = β/(νz) から動的臨界指数 z を推定。
+
+```bash
+python scripts/analyze_ner_critical.py samples/square_L16_Ising/NER_result.dat
+python scripts/analyze_ner_critical.py NER_result.dat --short-time --plot
+```
+
+- `--t-min`, `--t-max`: フィット範囲
+- `--short-time`: 短時間領域のみフィット（推奨）
+- `--plot`: フィット結果をプロット
+
+※ べき乗減衰は T≈Tc で成立。`param_ner_tc.def` (Ini_T=2.27) を使用。
+
+## plot_ner_result.py
+
+NER_result.dat をプロットする（単体実行用）。
+
+```bash
+cd samples/square_L16_Ising
+python ../../scripts/plot_ner_result.py -o NER_plot.png
+```
+
 ## benchmark_exchange_mc.py
 
 Exchange MC の効果をエラーバー比較で検証するスクリプト。
